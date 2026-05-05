@@ -376,6 +376,7 @@ def build_demo():
                 const border = isLight ? "#d8cfbb" : "#2a2a32";
                 const textMain = isLight ? "#1f1a14" : "#f0ede6";
                 const textTaupe = "#5b5246";
+
                 document.querySelectorAll('.result-container').forEach(el => {
                     el.style.backgroundColor = bgMain;
                     el.style.borderColor = border;
