@@ -181,9 +181,7 @@ h3 { font-size: 1.25rem; }
 	color: var(--cream) !important;
 }
 
-/* ================================================================
-    GRADIO OVERRIDES
-    ================================================================ */
+/* GRADIO OVERRIDES */
 
 .gradio-container {
 	background: var(--ink) !important;
