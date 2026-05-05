@@ -355,7 +355,7 @@ fieldset {
 	border-bottom-color: #b8893f !important;
 }
 
-/* Nav button - inactive (greyed, not clickable) */
+/* Nav button - inactive  */
 .nav-btn--inactive button,
 .nav-btn button {
 	background: #2a2a32 !important;
@@ -371,7 +371,7 @@ fieldset {
 	transition: background 200ms ease, color 200ms ease !important;
 }
 
-/* Nav button - ready (orange, clickable) */
+/* Nav button - ready  */
 .nav-btn--ready button {
 	background: #e8500a !important;
 	color: #ffffff !important;
@@ -381,9 +381,6 @@ fieldset {
 	background: #ff6120 !important;
 } 
 
-/* ================================================================
-    LIGHT MODE OVERRIDES
-    ================================================================ */
 
 body.light {
     background-color: var(--paper);
@@ -406,7 +403,7 @@ body.light h1, body.light h2, body.light h3, body.light .serif, body.light .eyeb
     color: var(--ink) !important;
 }
 
-/* Title & Subtitle Color Adjustment */
+/* Title & Subtitle Color */
 body.light .hero .sans { color: var(--taupe) !important; }
 body.light #hero-subtitle { color: var(--taupe) !important; }
 
@@ -426,15 +423,23 @@ body.light [data-testid="audio"] {
     border-color: var(--border) !important;
 }
 
+body.light [data-testid="audio"] div,
+body.light [data-testid="audio"] > * {
+    background: transparent !important;
+}
+
 body.light [data-testid="audio"] p, 
 body.light [data-testid="audio"] span, 
-body.light [data-testid="audio"] label {
+body.light [data-testid="audio"] label,
+body.light [data-testid="audio"] .empty-container span,
+body.light [data-testid="audio"] .wrap span {
     color: var(--ink) !important;
 }
 
 body.light [data-testid="audio"] button {
     background: var(--paper) !important;
     color: var(--ink) !important;
+    border-color: var(--border) !important;
 }
 
 body.light .recital-dropdown label {
@@ -453,7 +458,7 @@ body.light .recital-tabs button.selected {
     opacity: 1;
 }
 
-/* Pitch & Feedback Section Headers Adjustment */
+/* Pitch & Feedback Section Headers */
 body.light .step-header {
     color: var(--taupe) !important;
 }
@@ -463,14 +468,124 @@ body.light .nav-btn button {
     color: var(--taupe) !important;
 }
 
-/* Note Chips styling*/
+/* Note Chips styling for Light Mode */
 body.light span.chip {
 	background: var(--paper) !important;
 	color: var(--taupe) !important;
 }
 
-/* AI Feedback text colors*/
+/* AI Feedback text colors for Light Mode */
 body.light .overview-box p, 
 body.light .feedback-tip-text {
 	color: var(--taupe) !important;
+}
+
+body.light .tabs > .tab-nav button,
+body.light .tab-nav button {
+    color: var(--taupe) !important;
+    opacity: 1 !important;
+}
+
+body.light .tabs > .tab-nav button.selected,
+body.light .tab-nav button.selected {
+    color: var(--gold) !important;
+    border-bottom-color: var(--gold) !important;
+}
+
+body.light [role="tab"] {
+    color: var(--taupe) !important;
+    opacity: 1 !important;
+}
+
+body.light [role="tab"][aria-selected="true"] {
+    color: var(--gold) !important;
+    border-bottom-color: var(--gold) !important;
+}
+
+body.light label,
+body.light .block label,
+body.light fieldset label,
+body.light .form label,
+body.light .gradio-container label,
+body.light [data-testid="dropdown"] label {
+    color: var(--ink) !important;
+}
+
+/* Step descriptions specifically */
+body.light .step-desc {
+    color: var(--taupe) !important;
+}
+
+/* Instructions text */
+body.light .eyebrow {
+    color: var(--taupe) !important;
+}
+
+/* dropdown titles (Instrument, Age Group) */
+body.light .gradio-container span.svelte-1gfkn6j,
+body.light .gradio-container .dropdown-arrow,
+body.light [data-testid="dropdown"] span {
+    color: var(--ink) !important;
+}
+
+
+
+body.light .gradio-container *:not(button) {
+    background-color: transparent !important;
+}
+
+body.light .gradio-container [data-testid="audio"] {
+    background-color: var(--cream) !important;
+}
+body.light .recital-dropdown input,
+body.light .recital-dropdown select,
+body.light .recital-dropdown .wrap,
+body.light .recital-dropdown ul,
+body.light .recital-dropdown .options {
+    background-color: var(--cream) !important;
+}
+body.light .nav-btn button {
+    background-color: var(--cream-deep) !important;
+}
+body.light .nav-btn--ready button {
+    background-color: #e8500a !important;
+}
+
+body.light .gradio-container label,
+body.light .gradio-container label span,
+body.light .gradio-container .label-wrap,
+body.light .gradio-container .label-wrap span,
+body.light .gradio-container [class*="label"],
+body.light .gradio-container [class*="label"] span {
+    color: var(--ink) !important;
+    opacity: 1 !important;
+}
+
+body.light #hero-subtitle,
+body.light .hero .serif,
+body.light .hero h1 .serif,
+body.light #comma {
+    color: var(--gold) !important;
+}
+
+
+/* Comma gold */
+body.light #comma {
+    color: var(--gold) !important;
+    opacity: 1 !important;
+}
+
+/* Instrument / Age Group */
+body.light .gradio-container label,
+body.light .gradio-container label *,
+body.light .gradio-container .block > label,
+body.light .gradio-container .block > label > span,
+body.light .gradio-container fieldset > span,
+body.light .gradio-container span[data-testid],
+body.light .gradio-container .wrap > span,
+body.light .gradio-container > div > div > div > label,
+body.light .gradio-container > div > div > div > label > span {
+    color: var(--ink) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
