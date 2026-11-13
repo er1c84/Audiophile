@@ -1,1 +1,7 @@
 audiophile.code-workspace
+.venv/
+__pycache__/
+*.py[cod]
+.cache/
+.local/
+.env

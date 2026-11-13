@@ -38,6 +38,29 @@ The application is deployed on Hugging Face Spaces and integrates signal process
 
 This project runs on Hugging Face Spaces using Gradio.
 
+### Run locally on Windows
+
+From the project folder, create a Python virtual environment and install the dependencies:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+To enable AI feedback, set your Groq API key in the current terminal session:
+
+```powershell
+$env:GROQ_API_KEY = "your-api-key"
+```
+
+Start the app:
+
+```powershell
+.\.venv\Scripts\python.exe app.py
+```
+
+Open the local address printed in the terminal. Without an API key, pitch analysis still works and the app displays basic fallback feedback. Keep API keys out of the repository.
+
 ### Steps to Run
 1. Create a new Space on Hugging Face  
 2. Upload all project files  

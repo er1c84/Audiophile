@@ -272,7 +272,7 @@ def build_demo():
                                 </ol>
                                 <div class="paper note">
                                     <div class="eyebrow">A note on privacy</div>
-                                    <p>Your recording is held in the browser only - it never leaves this page. Refresh the tab and it is gone.</p>
+                                    <p>Your recording is sent to the app for analysis. If AI feedback is enabled, the pitch measurements, instrument, and age group are sent to Groq; the recording itself is not sent to Groq.</p>
                                 </div>
                             </aside>
                         """)

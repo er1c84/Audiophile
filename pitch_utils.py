@@ -83,36 +83,38 @@ def detect_pitch_and_note(audio_path: str, instrument: str):
     consistency : float  – 0-100, inverse of pitch std-dev
     all_notes   : list   – [(note_str, count), ...] sorted by freq
     error       : str|None
+    pitch_timeline : list|None – estimated pitch per frame
     """
     try:
         y, sr = librosa.load(audio_path, sr=22050, mono=True)
     except Exception as e:
-        return None, None, None, None, None, None, f"Could not load audio: {e}"
+        return None, None, None, None, None, None, f"Could not load audio: {e}", None
 
     # Normalise
-    if np.max(np.abs(y)) > 0:
-        y = librosa.util.normalize(y)
+    if len(y) == 0 or not np.any(y):
+        return None, None, None, None, None, None, "No audible audio detected.", None
+    y = librosa.util.normalize(y)
 
     # YIN pitch detection — returns pitch per frame
     lo, hi = INSTRUMENT_RANGES.get(instrument, (60, 2000))
     try:
         f0 = librosa.yin(y, fmin=max(50, lo * 0.8), fmax=min(4500, hi * 1.2), sr=sr)
     except Exception as e:
-        return None, None, None, None, None, None, f"Pitch detection failed: {e}"
+        return None, None, None, None, None, None, f"Pitch detection failed: {e}", None
 
     # Keep only voiced (non-zero) pitches
     voiced = f0[f0 > 20]
 
     if len(voiced) == 0:
         return None, None, None, None, None, None, \
-            "No clear pitch detected. Try playing a single sustained note."
+            "No clear pitch detected. Try playing a single sustained note.", None
 
     # Filter to instrument range with 20% tolerance
     in_range = voiced[(voiced >= lo * 0.8) & (voiced <= hi * 1.2)]
     if len(in_range) == 0:
         median_f = float(np.median(voiced))
         return median_f, None, None, None, None, None, \
-            f"Pitch ({median_f:.1f} Hz) is outside the expected range for {instrument}."
+            f"Pitch ({median_f:.1f} Hz) is outside the expected range for {instrument}.", None
 
     # --- Dominant frequency via histogram of notes ---
     note_counts: dict = {}
@@ -126,7 +128,7 @@ def detect_pitch_and_note(audio_path: str, instrument: str):
         cents_by_note.setdefault(n, []).append(c)
 
     if not note_counts:
-        return None, None, None, None, None, None, "No mappable pitches found."
+        return None, None, None, None, None, None, "No mappable pitches found.", None
 
     # Dominant note = most frequent
     dominant_note = max(note_counts, key=note_counts.__getitem__)
