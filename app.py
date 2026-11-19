@@ -218,18 +218,36 @@ def toggle_theme(current_theme):
 
 
 def render_fretboard():
-    # Open string MIDI notes in standard tuning, from high e to low E.
-    strings = (("e", 64), ("B", 59), ("G", 55), ("D", 50), ("A", 45), ("E", 40))
+    # Open-string MIDI notes and fifth-position scale frets, from high e to low E.
+    strings = (
+        ("e", 64, (5, 8)),
+        ("B", 59, (5, 8)),
+        ("G", 55, (5, 7)),
+        ("D", 50, (5, 7)),
+        ("A", 45, (5, 7)),
+        ("E", 40, (5, 8)),
+    )
     frets = range(13)
     inlay_counts = {3: 1, 5: 1, 7: 1, 9: 1, 12: 2}
     inlay = "<span class='scale-inlay'></span>"
     fret_headers = "".join(f"<th scope='col'>{fret}</th>" for fret in frets)
     note_names = [note.replace("#", "♯") for note in NOTE_NAMES]
     string_rows = []
-    for string, open_midi in strings:
-        notes = (note_names[(open_midi + fret) % len(note_names)] for fret in frets)
-        fret_cells = "".join(f"<td><span class='scale-note'>{note}</span></td>" for note in notes)
-        string_rows.append(f"<tr><th scope='row'>{string}</th>{fret_cells}</tr>")
+    for string, open_midi, scale_frets in strings:
+        fret_cells = []
+        for fret in frets:
+            note = note_names[(open_midi + fret) % len(note_names)]
+            marker = ""
+            if fret in scale_frets:
+                is_root = note == "A"
+                marker_class = "scale-marker scale-marker--root" if is_root else "scale-marker"
+                description = "scale root" if is_root else "scale note"
+                marker = (
+                    f"<span class='{marker_class}' role='img' "
+                    f"aria-label='{note}, {description}'></span>"
+                )
+            fret_cells.append(f"<td>{marker}<span class='scale-note'>{note}</span></td>")
+        string_rows.append(f"<tr><th scope='row'>{string}</th>{''.join(fret_cells)}</tr>")
 
     inlay_cells = "".join(
         f"<td>{inlay * inlay_counts.get(fret, 0)}</td>" for fret in frets
@@ -239,13 +257,24 @@ def render_fretboard():
         <section class="scale-panel" aria-labelledby="scale-title">
             <header class="scale-header">
                 <div>
-                    <h2 id="scale-title">Guitar fretboard</h2>
-                    <p class="scale-tuning">Standard tuning · A4 = 440 Hz</p>
+                    <h2 id="scale-title">
+                        <span class="scale-default-title">Guitar fretboard</span>
+                        <span class="scale-overlay-text">A minor pentatonic</span>
+                    </h2>
+                    <p class="scale-tuning">
+                        <span class="scale-overlay-text">Fifth position ·</span> Standard tuning · A4 = 440 Hz
+                    </p>
                 </div>
-                <label class="scale-notes-toggle">
-                    <input type="checkbox" role="switch" aria-controls="scale-fretboard">
-                    Show notes
-                </label>
+                <div class="scale-controls">
+                    <label class="scale-toggle">
+                        <input id="scale-shape-switch" type="checkbox" role="switch" aria-controls="scale-fretboard scale-legend">
+                        Show A minor pentatonic
+                    </label>
+                    <label class="scale-toggle">
+                        <input id="scale-notes-switch" type="checkbox" role="switch" aria-controls="scale-fretboard">
+                        Show notes
+                    </label>
+                </div>
             </header>
             <div class="scale-scroll" role="region" aria-label="Guitar fretboard" tabindex="0">
                 <table id="scale-fretboard" class="scale-fretboard" aria-label="Six-string guitar, frets 0 through 12">
@@ -254,6 +283,10 @@ def render_fretboard():
                     <tfoot aria-hidden="true"><tr><td></td>{inlay_cells}</tr></tfoot>
                 </table>
             </div>
+            <ul id="scale-legend" class="scale-legend" aria-label="Fretboard legend">
+                <li><span class="scale-marker scale-marker--root" aria-hidden="true"></span>A root</li>
+                <li><span class="scale-marker" aria-hidden="true"></span>Scale note</li>
+            </ul>
             <p class="scale-hint">Fret 0 is the open string. The thinnest string, high e, is at the top.</p>
         </section>
     """

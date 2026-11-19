@@ -27,7 +27,9 @@ The application is deployed on Hugging Face Spaces and integrates signal process
 
 Open **Scale** to explore the guitar fretboard from fret 0 through 12. The board uses standard tuning (E–A–D–G–B–E from low to high) with A4 = 440 Hz.
 
-Turn on **Show notes** to reveal the note at each string and fret. Turn it off to practice finding notes from memory. Fret 0 is the open string, and fret 12 is the same note one octave higher.
+Turn on **Show A minor pentatonic** to display the fifth-position shape at frets 5, 7, and 8. The shape starts hidden. When shown, muted dots mark the scale notes, and gold rings mark the **A** roots. To practice one octave, start at fret 5 on the low E string and play **A → C → D → E → G → A**, ending at fret 7 on the D string.
+
+Use **Show notes** with either view to reveal the note at each string and fret. Turn it off to practice finding notes from memory. Fret 0 is the open string, and fret 12 is the same note one octave higher.
 
 ---
 

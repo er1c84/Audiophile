@@ -599,6 +599,8 @@ body.light .gradio-container > div > div > div > label > span {
     --scale-fret: #95795b;
     --scale-nut: #e4d1ac;
     --scale-string: #c9b69a;
+    --scale-dot: #c6ab8b;
+    --scale-root: #f2bf70;
     background-color: var(--scale-surface);
     color: var(--scale-text);
     border: 1px solid var(--scale-border);
@@ -617,6 +619,8 @@ body.light .gradio-container .recital-tabs .scale-panel {
     --scale-fret: #a28669;
     --scale-nut: #664e38;
     --scale-string: #785b42;
+    --scale-dot: #866d54;
+    --scale-root: #8d530e;
     background-color: var(--scale-surface) !important;
 }
 
@@ -628,7 +632,13 @@ body.light .gradio-container .recital-tabs .scale-panel {
     gap: 0.75rem 1rem;
 }
 
-.scale-notes-toggle {
+.scale-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.scale-toggle {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -641,13 +651,22 @@ body.light .gradio-container .recital-tabs .scale-panel {
     cursor: pointer;
 }
 
-.scale-notes-toggle input {
+.scale-toggle input {
     appearance: auto;
     width: 1rem;
     height: 1rem;
     margin: 0;
     accent-color: var(--gold);
     cursor: pointer;
+}
+
+.scale-overlay-text,
+.scale-panel:has(#scale-shape-switch:checked) .scale-default-title {
+    display: none;
+}
+
+.scale-panel:has(#scale-shape-switch:checked) .scale-overlay-text {
+    display: inline;
 }
 
 .scale-tuning, .scale-hint {
@@ -667,7 +686,7 @@ body.light .gradio-container .recital-tabs .scale-panel {
 
 .scale-fretboard {
     width: 100%;
-    min-width: 40rem;
+    min-width: 17rem;
     table-layout: fixed;
     border-collapse: collapse;
     text-align: center;
@@ -686,7 +705,7 @@ body.light .gradio-container .recital-tabs .scale-panel {
 }
 
 .scale-fretboard thead th:first-child {
-    width: 4rem;
+    width: clamp(2.25rem, 6vw, 4rem);
 }
 
 .scale-fretboard thead th:first-child,
@@ -700,13 +719,44 @@ body.light .gradio-container .recital-tabs .scale-panel {
 .scale-fretboard tbody td {
     --fret-fill: var(--scale-wood);
     position: relative;
-    height: 2.15rem;
+    height: 2.375rem;
     border-inline-end: 1px solid var(--scale-fret);
     background-color: var(--fret-fill);
     background-image: linear-gradient(var(--scale-string), var(--scale-string));
     background-position: center;
     background-repeat: no-repeat;
     background-size: 100% var(--string-width, 1px);
+}
+
+.scale-marker {
+    --marker-fill: var(--scale-dot);
+    display: none;
+    flex: 0 0 auto;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: var(--marker-fill);
+}
+
+.scale-panel:has(#scale-shape-switch:checked) .scale-marker {
+    display: inline-block;
+}
+
+.scale-marker--root {
+    --marker-fill: var(--fret-fill, var(--scale-surface));
+    width: 0.8125rem;
+    height: 0.8125rem;
+    border: 2px solid var(--scale-root);
+}
+
+.scale-fretboard .scale-marker {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+}
+
+body.light .gradio-container .scale-panel .scale-marker {
+    background-color: var(--marker-fill) !important;
 }
 
 .scale-note {
@@ -720,7 +770,15 @@ body.light .gradio-container .recital-tabs .scale-panel {
     line-height: 1;
 }
 
-.scale-panel:has(.scale-notes-toggle input:checked) .scale-note {
+.scale-panel:has(#scale-shape-switch:checked) .scale-marker + .scale-note {
+    bottom: calc(50% + 0.3125rem);
+}
+
+.scale-panel:has(#scale-shape-switch:checked) .scale-marker--root + .scale-note {
+    bottom: calc(50% + 0.4375rem);
+}
+
+.scale-panel:has(#scale-notes-switch:checked) .scale-note {
     display: block;
 }
 
@@ -761,4 +819,30 @@ body.light .gradio-container .scale-fretboard tbody :is(th, td) {
     height: 100%;
     border-radius: inherit;
     background: var(--gold);
+}
+
+.scale-legend {
+    display: none;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin: 0 0 0.65rem;
+    padding: 0;
+    list-style: none;
+    font-size: 0.875rem;
+}
+
+.scale-panel:has(#scale-shape-switch:checked) .scale-legend {
+    display: flex;
+}
+
+.scale-legend li {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+@media (max-width: 600px) {
+    .scale-fretboard {
+        font-size: 0.75rem;
+    }
 }
