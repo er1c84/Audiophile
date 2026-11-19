@@ -4,10 +4,9 @@ Full pitch detection + age-adjusted feedback demo.
 """
 
 import gradio as gr
-from pitch_utils import detect_pitch_and_note
 from feedback import generate_feedback
 from instruments import INSTRUMENT_RANGES
-from pitch_utils import create_pitch_graph
+from pitch_utils import NOTE_NAMES, create_pitch_graph, detect_pitch_and_note
 
 # Instrument list
 INSTRUMENTS = list(INSTRUMENT_RANGES.keys())
@@ -219,28 +218,39 @@ def toggle_theme(current_theme):
 
 
 def render_fretboard():
-    strings = ("e", "B", "G", "D", "A", "E")
+    # Open string MIDI notes in standard tuning, from high e to low E.
+    strings = (("e", 64), ("B", 59), ("G", 55), ("D", 50), ("A", 45), ("E", 40))
     frets = range(13)
     inlay_counts = {3: 1, 5: 1, 7: 1, 9: 1, 12: 2}
     inlay = "<span class='scale-inlay'></span>"
     fret_headers = "".join(f"<th scope='col'>{fret}</th>" for fret in frets)
-    fret_cells = "<td></td>" * len(frets)
-    string_rows = "".join(
-        f"<tr><th scope='row'>{pitch}</th>{fret_cells}</tr>"
-        for pitch in strings
-    )
+    note_names = [note.replace("#", "♯") for note in NOTE_NAMES]
+    string_rows = []
+    for string, open_midi in strings:
+        notes = (note_names[(open_midi + fret) % len(note_names)] for fret in frets)
+        fret_cells = "".join(f"<td><span class='scale-note'>{note}</span></td>" for note in notes)
+        string_rows.append(f"<tr><th scope='row'>{string}</th>{fret_cells}</tr>")
+
     inlay_cells = "".join(
         f"<td>{inlay * inlay_counts.get(fret, 0)}</td>" for fret in frets
     )
 
     return f"""
         <section class="scale-panel" aria-labelledby="scale-title">
-            <h2 id="scale-title">Guitar fretboard</h2>
-            <p class="scale-tuning">Standard tuning</p>
+            <header class="scale-header">
+                <div>
+                    <h2 id="scale-title">Guitar fretboard</h2>
+                    <p class="scale-tuning">Standard tuning · A4 = 440 Hz</p>
+                </div>
+                <label class="scale-notes-toggle">
+                    <input type="checkbox" role="switch" aria-controls="scale-fretboard">
+                    Show notes
+                </label>
+            </header>
             <div class="scale-scroll" role="region" aria-label="Guitar fretboard" tabindex="0">
-                <table class="scale-fretboard" aria-label="Six-string guitar, frets 0 through 12">
+                <table id="scale-fretboard" class="scale-fretboard" aria-label="Six-string guitar, frets 0 through 12">
                     <thead><tr><th scope="col">String</th>{fret_headers}</tr></thead>
-                    <tbody>{string_rows}</tbody>
+                    <tbody>{''.join(string_rows)}</tbody>
                     <tfoot aria-hidden="true"><tr><td></td>{inlay_cells}</tr></tfoot>
                 </table>
             </div>

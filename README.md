@@ -23,6 +23,14 @@ The application is deployed on Hugging Face Spaces and integrates signal process
 
 ---
 
+## Guitar Scale tab
+
+Open **Scale** to explore the guitar fretboard from fret 0 through 12. The board uses standard tuning (E–A–D–G–B–E from low to high) with A4 = 440 Hz.
+
+Turn on **Show notes** to reveal the note at each string and fret. Turn it off to practice finding notes from memory. Fret 0 is the open string, and fret 12 is the same note one octave higher.
+
+---
+
 ## System Workflow
 1. Select instrument and age group  
 2. Upload or record audio  
