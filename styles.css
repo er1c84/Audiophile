@@ -587,3 +587,132 @@ body.light .gradio-container > div > div > div > label > span {
     opacity: 1 !important;
     visibility: visible !important;
 }
+
+/* Scale tab */
+.scale-panel {
+    --scale-surface: #2b2219;
+    --scale-text: #f6f1e6;
+    --scale-muted: #dac7aa;
+    --scale-border: #665038;
+    --scale-wood: #4b3425;
+    --scale-open: #211911;
+    --scale-fret: #95795b;
+    --scale-nut: #e4d1ac;
+    --scale-string: #c9b69a;
+    background-color: var(--scale-surface);
+    color: var(--scale-text);
+    border: 1px solid var(--scale-border);
+    border-radius: var(--radius);
+    padding: clamp(1rem, 3vw, 2rem);
+    margin-block: 0.5rem;
+}
+
+body.light .gradio-container .recital-tabs .scale-panel {
+    --scale-surface: #fbf7ee;
+    --scale-text: #2b2119;
+    --scale-muted: #5e4a37;
+    --scale-border: #d3bca0;
+    --scale-wood: #eedac0;
+    --scale-open: #f7eddd;
+    --scale-fret: #a28669;
+    --scale-nut: #664e38;
+    --scale-string: #785b42;
+    background-color: var(--scale-surface) !important;
+}
+
+.scale-tuning, .scale-hint {
+    color: var(--scale-muted);
+    font-size: 0.9rem;
+}
+
+.scale-scroll {
+    overflow-x: auto;
+    margin-block: 1rem;
+}
+
+.scale-scroll:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+}
+
+.scale-fretboard {
+    width: 100%;
+    min-width: 40rem;
+    table-layout: fixed;
+    border-collapse: collapse;
+    text-align: center;
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.scale-fretboard th {
+    font-weight: 600;
+    text-align: center;
+}
+
+.scale-fretboard thead th {
+    color: var(--scale-muted);
+    padding-block: 0.45rem;
+}
+
+.scale-fretboard thead th:first-child {
+    width: 4rem;
+}
+
+.scale-fretboard thead th:first-child,
+.scale-fretboard tbody th {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    background-color: var(--scale-surface);
+}
+
+.scale-fretboard tbody td {
+    --fret-fill: var(--scale-wood);
+    height: 2.15rem;
+    border-inline-end: 1px solid var(--scale-fret);
+    background-color: var(--fret-fill);
+    background-image: linear-gradient(var(--scale-string), var(--scale-string));
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% var(--string-width, 1px);
+}
+
+.scale-fretboard tbody td:first-of-type {
+    --fret-fill: var(--scale-open);
+    border-inline-end: 4px solid var(--scale-nut);
+}
+
+.scale-fretboard tbody tr:nth-child(n+3) {
+    --string-width: 1.5px;
+}
+
+.scale-fretboard tbody tr:nth-child(n+5) {
+    --string-width: 2px;
+}
+
+body.light .gradio-container .scale-fretboard thead th:first-child,
+body.light .gradio-container .scale-fretboard tbody :is(th, td) {
+    background-color: var(--fret-fill, var(--scale-surface)) !important;
+}
+
+.scale-fretboard tfoot td {
+    height: 1.1rem;
+}
+
+.scale-inlay {
+    display: inline-block;
+    width: 0.32rem;
+    height: 0.32rem;
+    margin-inline: 0.12rem;
+    border-radius: 50%;
+}
+
+.scale-inlay::before {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--gold);
+}

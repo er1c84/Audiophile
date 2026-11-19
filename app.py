@@ -218,6 +218,37 @@ def toggle_theme(current_theme):
     return new_theme
 
 
+def render_fretboard():
+    strings = ("e", "B", "G", "D", "A", "E")
+    frets = range(13)
+    inlay_counts = {3: 1, 5: 1, 7: 1, 9: 1, 12: 2}
+    inlay = "<span class='scale-inlay'></span>"
+    fret_headers = "".join(f"<th scope='col'>{fret}</th>" for fret in frets)
+    fret_cells = "<td></td>" * len(frets)
+    string_rows = "".join(
+        f"<tr><th scope='row'>{pitch}</th>{fret_cells}</tr>"
+        for pitch in strings
+    )
+    inlay_cells = "".join(
+        f"<td>{inlay * inlay_counts.get(fret, 0)}</td>" for fret in frets
+    )
+
+    return f"""
+        <section class="scale-panel" aria-labelledby="scale-title">
+            <h2 id="scale-title">Guitar fretboard</h2>
+            <p class="scale-tuning">Standard tuning</p>
+            <div class="scale-scroll" role="region" aria-label="Guitar fretboard" tabindex="0">
+                <table class="scale-fretboard" aria-label="Six-string guitar, frets 0 through 12">
+                    <thead><tr><th scope="col">String</th>{fret_headers}</tr></thead>
+                    <tbody>{string_rows}</tbody>
+                    <tfoot aria-hidden="true"><tr><td></td>{inlay_cells}</tr></tfoot>
+                </table>
+            </div>
+            <p class="scale-hint">Fret 0 is the open string. The thinnest string, high e, is at the top.</p>
+        </section>
+    """
+
+
 def build_demo():
 
     with gr.Blocks(title="Audiophile — Pitch Detection", elem_id="main-container") as demo:
@@ -234,7 +265,7 @@ def build_demo():
             </section>
         """)
 
-        with gr.Tabs() as tabs:
+        with gr.Tabs(overflow_behavior="wrap") as tabs:
 
             # Tab 1 - Input
             with gr.Tab("Instruments and Audio", elem_classes="recital-tabs", id=0):
@@ -336,6 +367,9 @@ def build_demo():
                     )
                 )
                 graph_out = gr.Plot(label="Pitch Graph")
+
+            with gr.Tab("Scale", elem_classes="recital-tabs", id=2):
+                gr.HTML(render_fretboard(), apply_default_css=False)
         
         # Theme Toggle Button
         with gr.Row():
@@ -347,15 +381,10 @@ def build_demo():
             inputs=[audio_input, instrument, age_group, theme_state],
             outputs=[pitch_out, feedback_out, graph_out],
         ).then(
-            fn=None,
-            js="""
-            () => {
-                const tabs = document.querySelectorAll('.tab-nav button');
-                if (tabs.length > 1) {
-                    tabs[1].click();
-                }
-            }
-            """
+            fn=lambda: gr.Tabs(selected=1),
+            outputs=tabs,
+            queue=False,
+            api_visibility="private",
         )
 
         theme_btn.click(
