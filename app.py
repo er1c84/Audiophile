@@ -95,7 +95,7 @@ PRACTICE_LIBRARY_JS = r"""
       for (let fret=0;fret<=lastFret;fret++) {
         const pitch = (midi+fret)%12;
         const inSelection = practiceSwitch.checked && (shape ? shape[index].includes(fret) : fret>=start && fret<=end && pcs.has(pitch));
-        const marker = inSelection ? `<span class="scale-marker${pitch===rootNote?' scale-marker--root':''}" role="img" aria-label="${noteAt(midi+fret)}${pitch===rootNote?', root':''}"></span>` : '';
+        const marker = inSelection ? `<span class="scale-marker${pitch===rootNote?' scale-marker--root':''}" role="img" aria-label="${noteAt(midi+fret)}${pitch===rootNote?', root':''}">${notes[pitch]}</span>` : '';
         html += `<td>${marker}<span class="scale-note">${notes[pitch]}</span></td>`;
       }
       html += '</tr>';

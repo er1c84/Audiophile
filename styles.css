@@ -599,8 +599,9 @@ body.light .gradio-container > div > div > div > label > span {
     --scale-fret: #95795b;
     --scale-nut: #e4d1ac;
     --scale-string: #c9b69a;
-    --scale-dot: #c6ab8b;
-    --scale-root: #f2bf70;
+    --scale-dot: #f4ede1;
+    --scale-root: #ebc781;
+    --scale-marker-ink: #211d1a;
     background-color: var(--scale-surface);
     color: var(--scale-text);
     border: 1px solid var(--scale-border);
@@ -619,8 +620,9 @@ body.light .gradio-container .recital-tabs .scale-panel {
     --scale-fret: #a28669;
     --scale-nut: #664e38;
     --scale-string: #785b42;
-    --scale-dot: #866d54;
+    --scale-dot: #29231d;
     --scale-root: #8d530e;
+    --scale-marker-ink: #fbf7ee;
     background-color: var(--scale-surface) !important;
 }
 
@@ -685,6 +687,10 @@ body.light .gradio-container .recital-tabs .scale-panel {
     font-variant-numeric: tabular-nums;
 }
 
+.scale-panel:has(#scale-practice-switch:checked) .scale-fretboard {
+    min-width: 34rem;
+}
+
 .scale-fretboard th {
     font-weight: 600;
     text-align: center;
@@ -734,16 +740,27 @@ body.light .gradio-container .recital-tabs .scale-panel {
 }
 
 .scale-marker--root {
-    --marker-fill: var(--fret-fill, var(--scale-surface));
+    --marker-fill: var(--scale-root);
     width: 0.8125rem;
     height: 0.8125rem;
-    border: 2px solid var(--scale-root);
 }
 
 .scale-fretboard .scale-marker {
     position: absolute;
     inset: 50% auto auto 50%;
     transform: translate(-50%, -50%);
+    width: 1.75rem;
+    height: 1.75rem;
+    align-items: center;
+    justify-content: center;
+    color: var(--scale-marker-ink);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.scale-panel:has(#scale-practice-switch:checked) .scale-fretboard .scale-marker {
+    display: flex;
 }
 
 body.light .gradio-container .scale-panel .scale-marker {
@@ -761,16 +778,12 @@ body.light .gradio-container .scale-panel .scale-marker {
     line-height: 1;
 }
 
-.scale-panel:has(#scale-practice-switch:checked) .scale-marker + .scale-note {
-    bottom: calc(50% + 0.3125rem);
-}
-
-.scale-panel:has(#scale-practice-switch:checked) .scale-marker--root + .scale-note {
-    bottom: calc(50% + 0.4375rem);
-}
-
 .scale-panel:has(#scale-notes-switch:checked) .scale-note {
     display: block;
+}
+
+.scale-panel:has(#scale-practice-switch:checked) .scale-marker + .scale-note {
+    display: none;
 }
 
 .scale-fretboard tbody td:first-of-type {
@@ -841,7 +854,7 @@ body.light .gradio-container .scale-fretboard tbody :is(th, td) {
 
 /* Practice library */
 .practice-library { --practice-bg:#211d1a; --practice-panel:#2b2621; --practice-text:#f4ede1; --practice-muted:#c5b7a3; --practice-border:#554b3f; --practice-accent:#ebc781; color:var(--practice-text); padding:2rem 0; }
-body.light .practice-library { --practice-bg:#fbf7ee; --practice-panel:#f2ebde; --practice-text:#29231d; --practice-muted:#675a4b; --practice-border:#d2c5b1; --practice-accent:#805516; }
+body.light .gradio-container .contain .practice-library { --practice-bg:#fbf7ee; --practice-panel:#f2ebde; --practice-text:#29231d; --practice-muted:#675a4b; --practice-border:#d2c5b1; --practice-accent:#805516; }
 .practice-library * { box-sizing:border-box; }
 .practice-library h2,.practice-library h3,.practice-library p { margin:0; color:var(--practice-text); }
 .practice-heading h2 { font:400 2rem var(--serif); margin:.3rem 0; }
