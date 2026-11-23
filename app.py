@@ -8,6 +8,143 @@ from feedback import generate_feedback
 from instruments import INSTRUMENT_RANGES
 from pitch_utils import NOTE_NAMES, create_pitch_graph, detect_pitch_and_note
 
+PRACTICE_LIBRARY_HTML = r"""
+<section class="practice-library" id="practice-library" aria-label="Practice scales" hidden>
+  <div class="practice-layout">
+    <aside class="practice-sidebar" aria-label="Choose your practice">
+      <div class="practice-field"><label>Instrument</label><div>Guitar · standard tuning</div></div>
+      <div class="practice-field"><label for="practice-scale">Scale</label><select id="practice-scale"><option>Minor pentatonic</option><option>Major pentatonic</option><option>Major</option><option>Natural minor</option><option>Blues</option></select></div>
+      <div class="practice-field"><label for="practice-key">Key</label><select id="practice-key"><option>A</option><option>A♯/B♭</option><option>B</option><option>C</option><option>C♯/D♭</option><option>D</option><option>D♯/E♭</option><option>E</option><option>F</option><option>F♯/G♭</option><option>G</option><option>G♯/A♭</option></select></div>
+      <div class="practice-quick"><h3>Quick access</h3><div class="practice-subheading">Saved</div><div id="practice-favorites"></div><div class="practice-subheading">Recent</div><div id="practice-recent"></div></div>
+    </aside>
+    <div class="practice-content">
+      <div class="practice-selected"><div><span class="practice-eyebrow">Scale</span><h3 id="practice-title">A minor pentatonic</h3><p>Guitar · standard tuning</p></div><button id="practice-save" type="button" aria-pressed="false">☆ Save</button></div>
+      <div class="practice-section"><div class="practice-label">Position</div><div id="practice-positions" class="practice-positions" role="group" aria-label="Choose a guitar position"><button type="button" data-position="shape-1" data-kind="shape">Position 1</button><button type="button" data-position="shape-2" data-kind="shape">Position 2</button><button type="button" data-position="shape-3" data-kind="shape">Position 3</button><button type="button" data-position="shape-4" data-kind="shape">Position 4</button><button type="button" data-position="shape-5" data-kind="shape">Position 5</button><button type="button" data-position="0-4" data-kind="range" hidden>Frets 0–4</button><button type="button" data-position="5-8" data-kind="range" hidden>Frets 5–8</button><button type="button" data-position="9-12" data-kind="range" hidden>Frets 9–12</button><button type="button" data-position="all">All notes</button></div><p id="practice-position-help" class="practice-pattern-note"></p></div>
+      <div class="practice-section"><label class="practice-label" for="practice-pattern">Practice pattern</label><select id="practice-pattern"><option>Scale notes</option><option>Ascending thirds</option><option>Groups of four</option></select><p class="practice-pattern-note">Play the sequence in any octave. Thirds are shown when both notes belong to the selected scale.</p><div id="practice-sequence" class="practice-sequence" aria-live="polite"></div></div>
+    </div>
+  </div>
+</section>
+
+"""
+
+PRACTICE_LIBRARY_JS = r"""
+() => {
+  const root = document.getElementById('practice-library');
+  const practiceSwitch = document.getElementById('scale-practice-switch');
+  const fretboard = document.getElementById('scale-fretboard');
+  if (!root || !practiceSwitch || !fretboard || root.dataset.ready === 'true') return;
+  root.dataset.ready = 'true';
+  const notes = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
+  const scales = {'Minor pentatonic':[0,3,5,7,10], 'Major pentatonic':[0,2,4,7,9], 'Major':[0,2,4,5,7,9,11], 'Natural minor':[0,2,3,5,7,8,10], 'Blues':[0,3,5,6,7,10]};
+  const strings = [['e',64],['B',59],['G',55],['D',50],['A',45],['E',40]];
+  const keyValues = {'A':9,'A♯/B♭':10,'B':11,'C':0,'C♯/D♭':1,'D':2,'D♯/E♭':3,'E':4,'F':5,'F♯/G♭':6,'G':7,'G♯/A♭':8};
+  const ranges = {'0-4':[0,4],'5-8':[5,8],'9-12':[9,12],all:[0,12]};
+  // Fret offsets from the minor root on the low E string, ordered high e to low E.
+  const shapes = [
+    [[0,3],[0,3],[0,2],[0,2],[0,2],[0,3]],
+    [[3,5],[3,5],[2,4],[2,5],[2,5],[3,5]],
+    [[5,7],[5,8],[4,7],[5,7],[5,7],[5,7]],
+    [[7,10],[8,10],[7,9],[7,9],[7,10],[7,10]],
+    [[10,12],[10,12],[9,12],[9,12],[10,12],[10,12]],
+  ];
+  const shapePositions = shapes.map((_,i)=>`shape-${i+1}`);
+  const pentatonic = value => value === 'Minor pentatonic' || value === 'Major pentatonic';
+  const $ = id => root.querySelector('#practice-' + id);
+  const scale = $('scale'), key = $('key'), pattern = $('pattern');
+  let position = 'shape-1';
+  let selectedStart = 0;
+  function revealPosition() {
+    const scroll = fretboard.closest('.scale-scroll');
+    if (!practiceSwitch.checked || !scroll || scroll.scrollWidth <= scroll.clientWidth || selectedStart === 0) return;
+    const firstCell = fretboard.querySelector(`tbody tr td:nth-child(${selectedStart + 2})`);
+    if (firstCell) scroll.scrollLeft += firstCell.getBoundingClientRect().left - scroll.getBoundingClientRect().left - 65;
+  }
+  const storageKey = 'audiophile.practice-library.v1';
+  let storage = {favorites:[], recent:[]};
+  try { const prior = JSON.parse(localStorage.getItem(storageKey) || '{}'); if (Array.isArray(prior.favorites)) storage.favorites = prior.favorites; if (Array.isArray(prior.recent)) storage.recent = prior.recent; } catch (_) {}
+  const persist = () => { try { localStorage.setItem(storageKey, JSON.stringify(storage)); } catch (_) {} };
+  const current = () => ({scale:scale.value, key:key.value, pattern:pattern.value, position});
+  const valid = x => x && Object.hasOwn(scales,x.scale) && Object.hasOwn(keyValues,x.key) && (Object.hasOwn(ranges,x.position) || (pentatonic(x.scale) && shapePositions.includes(x.position))) && Array.from(pattern.options).some(o => o.value === x.pattern);
+  storage.favorites = storage.favorites.filter(valid).slice(0,20);
+  storage.recent = storage.recent.filter(valid).slice(0,5);
+  const id = x => JSON.stringify([x.key,x.scale,x.position,x.pattern]);
+  const prettyPosition = x => shapePositions.includes(x) ? `position ${x.slice(-1)}` : ({'0-4':'frets 0–4','5-8':'frets 5–8','9-12':'frets 9–12',all:'all notes'})[x];
+  const name = x => `${x.key} ${x.scale.toLowerCase()}`;
+  function noteAt(midi) { return notes[midi % 12] + (Math.floor(midi / 12) - 1); }
+  function sequence(rootNote, intervals, selectedPattern) {
+    const degree = n => 60 + rootNote + intervals[n % intervals.length] + 12 * Math.floor(n / intervals.length);
+    const pitch = midi => notes[midi % 12];
+    if (selectedPattern === 'Ascending thirds') return Array.from({length:intervals.length}, (_,i) => { const from=degree(i); const to=[3,4].map(step=>from+step).find(candidate=>intervals.includes((candidate-60-rootNote)%12)); return to===undefined?null:[from,to].map(pitch).join(' – '); }).filter(Boolean).join('  ·  ');
+    if (selectedPattern === 'Groups of four') return Array.from({length:intervals.length}, (_,i) => [0,1,2,3].map(n => pitch(degree(i+n))).join(' – ')).join('  ·  ');
+    return Array.from({length:intervals.length+1}, (_,i) => pitch(degree(i))).join(' – ');
+  }
+  function board(rootNote, intervals) {
+    const shapeIndex = shapePositions.indexOf(position);
+    const minorRoot = scale.value === 'Major pentatonic' ? (rootNote + 9) % 12 : rootNote;
+    const baseFret = (minorRoot - 4 + 12) % 12;
+    const shape = shapeIndex < 0 ? null : shapes[shapeIndex].map(row => row.map(offset => offset + baseFret));
+    const shapeFrets = shape ? shape.flat() : [];
+    const [start,end] = shape ? [Math.min(...shapeFrets),Math.max(...shapeFrets)] : ranges[position];
+    const pcs = new Set(intervals.map(x => (rootNote+x)%12));
+    let html = '<thead><tr><th scope="col">String</th>';
+    const lastFret = practiceSwitch.checked ? Math.max(12,end) : 12;
+    for (let fret=0;fret<=lastFret;fret++) html += `<th scope="col">${fret}</th>`;
+    html += '</tr></thead><tbody>';
+    for (const [index,[string,midi]] of strings.entries()) {
+      html += `<tr><th scope="row">${string}</th>`;
+      for (let fret=0;fret<=lastFret;fret++) {
+        const pitch = (midi+fret)%12;
+        const inSelection = practiceSwitch.checked && (shape ? shape[index].includes(fret) : fret>=start && fret<=end && pcs.has(pitch));
+        const marker = inSelection ? `<span class="scale-marker${pitch===rootNote?' scale-marker--root':''}" role="img" aria-label="${noteAt(midi+fret)}${pitch===rootNote?', root':''}"></span>` : '';
+        html += `<td>${marker}<span class="scale-note">${notes[pitch]}</span></td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody><tfoot aria-hidden="true"><tr><td></td>';
+    for (let fret=0;fret<=lastFret;fret++) {
+      const count = fret === 12 || fret === 24 ? 2 : [3,5,7,9,15,17,19,21].includes(fret) ? 1 : 0;
+      html += `<td>${'<span class="scale-inlay"></span>'.repeat(count)}</td>`;
+    }
+    fretboard.innerHTML = html + '</tr></tfoot>';
+    fretboard.setAttribute('aria-label',`Six-string guitar, frets 0 through ${lastFret}`);
+    fretboard.style.minWidth = lastFret > 12 ? `${(lastFret+2)*2.4}rem` : '';
+    document.getElementById('scale-root-label').textContent = `${key.value} root`;
+    selectedStart = start;
+    requestAnimationFrame(revealPosition);
+  }
+  function shortcuts(target, items, empty) {
+    target.replaceChildren();
+    if (!items.length) { const p=document.createElement('p'); p.textContent=empty; p.className='practice-empty'; target.appendChild(p); return; }
+    items.forEach(item => {
+      const button=document.createElement('button'); button.type='button'; button.className='practice-shortcut';
+      const strong=document.createElement('strong'); strong.textContent=name(item);
+      const detail=document.createElement('span'); detail.textContent=`${prettyPosition(item.position)} · ${item.pattern}`;
+      button.append(strong,detail);
+      button.addEventListener('click',()=>{key.value=item.key; scale.value=item.scale; pattern.value=item.pattern; position=item.position; update(true);});
+      target.appendChild(button);
+    });
+  }
+  function update(addRecent=false) {
+    const selection=current(), rootNote=keyValues[selection.key], intervals=scales[selection.scale];
+    $('title').textContent=name(selection); $('sequence').textContent=sequence(rootNote,intervals,selection.pattern); board(rootNote,intervals);
+    root.querySelectorAll('[data-position]').forEach(button=>{button.hidden=button.dataset.kind==='shape'?!pentatonic(scale.value):button.dataset.kind==='range'?pentatonic(scale.value):false;button.setAttribute('aria-pressed',String(button.dataset.position===position));});
+    $('position-help').textContent = pentatonic(scale.value) ? 'Choose one of five movable pentatonic shapes. Major shapes use the corresponding relative minor position.' : 'Choose a fret range to see scale notes.';
+    const isSaved=storage.favorites.some(x=>id(x)===id(selection)); $('save').setAttribute('aria-pressed',String(isSaved)); $('save').textContent=isSaved?'★ Saved':'☆ Save';
+    if (addRecent) {storage.recent=[selection,...storage.recent.filter(x=>id(x)!==id(selection))].slice(0,5);persist();}
+    shortcuts($('favorites'),storage.favorites,'Save a selection to keep it here.'); shortcuts($('recent'),storage.recent,'Your recent selections will appear here.');
+  }
+  scale.addEventListener('change',()=>{if (position!=='all') position=pentatonic(scale.value)?'shape-1':'5-8'; update(true);});
+  [key,pattern].forEach(el=>el.addEventListener('change',()=>update(true)));
+  practiceSwitch.addEventListener('change',()=>{root.hidden=!practiceSwitch.checked;update();});
+  window.addEventListener('resize',()=>requestAnimationFrame(revealPosition));
+  root.querySelectorAll('[data-position]').forEach(button=>button.addEventListener('click',()=>{position=button.dataset.position;update(true)}));
+  $('save').addEventListener('click',()=>{const item=current(); const exists=storage.favorites.some(x=>id(x)===id(item)); storage.favorites=exists?storage.favorites.filter(x=>id(x)!==id(item)):[item,...storage.favorites].slice(0,20);persist();update();});
+  update();
+}
+
+"""
+
+
 # Instrument list
 INSTRUMENTS = list(INSTRUMENT_RANGES.keys())
 AGE_GROUPS  = ["Child (6-12)", "Teen (13-18)", "Adult (18+)"]
@@ -218,14 +355,10 @@ def toggle_theme(current_theme):
 
 
 def render_fretboard():
-    # Open-string MIDI notes and fifth-position scale frets, from high e to low E.
+    # Open-string MIDI notes, from high e to low E.
     strings = (
-        ("e", 64, (5, 8)),
-        ("B", 59, (5, 8)),
-        ("G", 55, (5, 7)),
-        ("D", 50, (5, 7)),
-        ("A", 45, (5, 7)),
-        ("E", 40, (5, 8)),
+        ("e", 64), ("B", 59), ("G", 55),
+        ("D", 50), ("A", 45), ("E", 40),
     )
     frets = range(13)
     inlay_counts = {3: 1, 5: 1, 7: 1, 9: 1, 12: 2}
@@ -233,20 +366,11 @@ def render_fretboard():
     fret_headers = "".join(f"<th scope='col'>{fret}</th>" for fret in frets)
     note_names = [note.replace("#", "♯") for note in NOTE_NAMES]
     string_rows = []
-    for string, open_midi, scale_frets in strings:
+    for string, open_midi in strings:
         fret_cells = []
         for fret in frets:
             note = note_names[(open_midi + fret) % len(note_names)]
-            marker = ""
-            if fret in scale_frets:
-                is_root = note == "A"
-                marker_class = "scale-marker scale-marker--root" if is_root else "scale-marker"
-                description = "scale root" if is_root else "scale note"
-                marker = (
-                    f"<span class='{marker_class}' role='img' "
-                    f"aria-label='{note}, {description}'></span>"
-                )
-            fret_cells.append(f"<td>{marker}<span class='scale-note'>{note}</span></td>")
+            fret_cells.append(f"<td><span class='scale-note'>{note}</span></td>")
         string_rows.append(f"<tr><th scope='row'>{string}</th>{''.join(fret_cells)}</tr>")
 
     inlay_cells = "".join(
@@ -257,22 +381,17 @@ def render_fretboard():
         <section class="scale-panel" aria-labelledby="scale-title">
             <header class="scale-header">
                 <div>
-                    <h2 id="scale-title">
-                        <span class="scale-default-title">Guitar fretboard</span>
-                        <span class="scale-overlay-text">A minor pentatonic</span>
-                    </h2>
-                    <p class="scale-tuning">
-                        <span class="scale-overlay-text">Fifth position ·</span> Standard tuning · A4 = 440 Hz
-                    </p>
+                    <h2 id="scale-title">Guitar fretboard</h2>
+                    <p class="scale-tuning">Standard tuning · A4 = 440 Hz</p>
                 </div>
                 <div class="scale-controls">
                     <label class="scale-toggle">
-                        <input id="scale-shape-switch" type="checkbox" role="switch" aria-controls="scale-fretboard scale-legend">
-                        Show A minor pentatonic
-                    </label>
-                    <label class="scale-toggle">
                         <input id="scale-notes-switch" type="checkbox" role="switch" aria-controls="scale-fretboard">
                         Show notes
+                    </label>
+                    <label class="scale-toggle">
+                        <input id="scale-practice-switch" type="checkbox" role="switch" aria-controls="practice-library scale-fretboard scale-legend">
+                        Practice scales
                     </label>
                 </div>
             </header>
@@ -284,10 +403,11 @@ def render_fretboard():
                 </table>
             </div>
             <ul id="scale-legend" class="scale-legend" aria-label="Fretboard legend">
-                <li><span class="scale-marker scale-marker--root" aria-hidden="true"></span>A root</li>
+                <li><span class="scale-marker scale-marker--root" aria-hidden="true"></span><span id="scale-root-label">A root</span></li>
                 <li><span class="scale-marker" aria-hidden="true"></span>Scale note</li>
             </ul>
             <p class="scale-hint">Fret 0 is the open string. The thinnest string, high e, is at the top.</p>
+            {PRACTICE_LIBRARY_HTML}
         </section>
     """
 
@@ -411,7 +531,7 @@ def build_demo():
                 )
                 graph_out = gr.Plot(label="Pitch Graph")
 
-            with gr.Tab("Scale", elem_classes="recital-tabs", id=2):
+            with gr.Tab("Scale", elem_classes="recital-tabs", id=2) as scale_tab:
                 gr.HTML(render_fretboard(), apply_default_css=False)
         
         # Theme Toggle Button
@@ -419,6 +539,8 @@ def build_demo():
             theme_btn = gr.Button("Toggle Theme", variant="secondary", size="sm")
 
         # Logic
+        demo.load(fn=None, js=PRACTICE_LIBRARY_JS)
+        scale_tab.select(fn=None, js=PRACTICE_LIBRARY_JS)
         analyze_btn.click(
             fn=analyze,
             inputs=[audio_input, instrument, age_group, theme_state],
